@@ -43,7 +43,7 @@ def connect():
     """A pooled connection (autocommit). Use as `with connect() as conn:`."""
     global _pool
     if _pool is None:
-        _pool = ConnectionPool(get_settings().mock_db_url, min_size=2, max_size=16, open=True,
+        _pool = ConnectionPool(get_settings().mock_db_url, min_size=2, max_size=16, open=True, check=ConnectionPool.check_connection,
                                kwargs={"autocommit": True, "prepare_threshold": None})
     return _pool.connection()
 

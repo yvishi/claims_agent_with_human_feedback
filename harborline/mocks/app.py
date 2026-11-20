@@ -238,3 +238,17 @@ def list_payments(claim_id: str):
                 claim_id)
     return [{"payment_id": r[0], "idempotency_key": r[1], "amount_inr": str(r[2]),
              "created_at": r[3].isoformat()} for r in rows]
+
+
+# ---- Admin listings (demo console only; not part of the brief's service spec) -----------------
+@app.get("/admin/claims")
+def admin_claims():
+    rows = _all("SELECT data FROM claims WHERE NOT settled ORDER BY claim_id")
+    return [r[0] for r in rows]
+
+
+@app.get("/admin/payments")
+def admin_payments():
+    rows = _all("SELECT payment_id, claim_id, idempotency_key, amount_inr, created_at FROM payments ORDER BY created_at")
+    return [{"payment_id": r[0], "claim_id": r[1], "idempotency_key": r[2], "amount_inr": str(r[3]),
+             "created_at": r[4].isoformat()} for r in rows]
