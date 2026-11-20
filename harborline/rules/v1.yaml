@@ -1,0 +1,23 @@
+# Harborline policy rules, version v1. Values from the assignment (Harborline page, P1-P10).
+version: v1
+
+initial_wait_days: 30               # P2: illness claims blocked for the first 30 days from inception
+specific_wait_months: 24            # P3
+specific_wait_conditions: [cataract, hernia, knee_replacement, sinus_surgery]
+room_cap_pct: "0.01"                # P4: 1% of sum insured per day
+icu_cap_pct: "0.02"                 # P4: ICU 2%
+proportionate_categories: [nursing, doctor_fee, procedure]   # reduced by cap / actual rate
+copay_age: 60                       # P5
+copay_pct: "0.10"
+sub_limits:                         # P6, per eye for cataract
+  cataract: "40000"
+late_filing_days: 30                # P10
+auto_approve_max: "25000"           # routing thresholds
+reviewer_above: "100000"
+
+# Condition detection from discharge summary diagnosis + procedure (lowercase, substring match)
+conditions:
+  cataract: [cataract, phaco]
+  hernia: [hernia]
+  knee_replacement: [knee replacement, total knee, tkr]
+  sinus_surgery: [sinus surgery, sinusitis, fess, endoscopic sinus]
