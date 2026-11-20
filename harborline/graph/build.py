@@ -17,6 +17,7 @@ from harborline import store
 from harborline.agents import adjudicator, approval, intake, letter, payout
 from harborline.agents.bill_reader import read_documents
 from harborline.config import get_settings
+from harborline.llm.client import model_name as llm_model_name
 from harborline.privacy import vault
 from harborline.rules.engine import load_rules
 from harborline.tools import services
@@ -89,13 +90,15 @@ def read_bills(s: ClaimState) -> dict:
     files = {d["filename"]: services.get_document(cid, d["filename"]) for d in services.list_documents(cid)}
     claim_full = services.get_claim(cid)  # names for the deny-list; used here, never stored in state
     deny = [services.get_member(claim_full["member_id"])["name"], (claim_full.get("payee") or {}).get("name", "")]
-    docs = read_documents(files, [n for n in deny if n], load_rules(str(get_settings().rules_file)))
+    docs = read_documents(files, [n for n in deny if n], load_rules(str(get_settings().rules_file)), claim_id=cid)
     vault.put(cid, docs.pop("pii"))  # encrypted; deleted at CLOSED
     for b in docs["bills"]:
         b.pop("other_text", None)  # keep free text out of checkpoints even though it is masked
     store.audit(cid, "bills_read", state="READ_BILLS", tool="bill_reader",
                 result={"reads": docs["reads"], "lines": sum(len(b["lines"]) for b in docs["bills"]),
-                        "doc_flags": docs["doc_flags"], "review_reasons": docs["review_reasons"]})
+                        "doc_flags": docs["doc_flags"], "review_reasons": docs["review_reasons"]},
+                model=llm_model_name() if docs["llm_used"] else None,
+                prompt_version=",".join(docs["llm_used"]) or None)
     return {"docs": docs}
 
 
