@@ -84,7 +84,7 @@ export function Desk({ user }: { user: User }) {
           <AnimatePresence initial={false}>
             {shown.map((c) => <ClaimLine key={c.claim_id} c={c} mine={mine(c)} onStart={() => startMany([c.claim_id])} />)}
           </AnimatePresence>
-          {shown.length === 0 && <li className="py-10 text-center text-sm text-ink3">No claims here.</li>}
+          {shown.length === 0 && <li className="py-10 text-center text-sm text-ink3">{data ? "No claims here." : "Loading claims…"}</li>}
         </motion.ul>
       </Card>
     </div>

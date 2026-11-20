@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle, ArrowLeft, Check, ChevronDown, FileText, Hospital, Info, Loader2, Lock, Mail, ShieldCheck, Upload,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api, type ClaimDetail, type User } from "../api";
 import {
@@ -37,13 +37,14 @@ export function ClaimPage({ user }: { user: User }) {
           </div>
           {c.scenario && <div className="mt-1 text-sm text-ink3">Scenario: {c.scenario}</div>}
         </div>
-        <Pill tone={tone(row)} spin={c.busy}>{statusLine(row)}</Pill>
+        <div className="w-full sm:w-auto"><Pill tone={tone(row)} spin={c.busy}>{statusLine(row)}</Pill></div>
       </div>
 
       <Journey c={c} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">
+          <div className="lg:hidden"><Decision c={c} user={user} onDone={refresh} /></div>
           {!c.run && <StartCard id={c.claim_id} onStarted={refresh} />}
           {c.draft && <MoneyStory c={c} />}
           {c.draft && <BillLines c={c} />}
@@ -51,7 +52,7 @@ export function ClaimPage({ user }: { user: User }) {
           {c.letter && <Letter body={c.letter.body} template={c.letter.template} />}
         </div>
         <div className="space-y-6">
-          <Decision c={c} user={user} onDone={refresh} />
+          <div className="hidden lg:block"><Decision c={c} user={user} onDone={refresh} /></div>
           {c.run?.state === "WAITING_FOR_DOCS" && <DocsWaiting c={c} onDone={refresh} />}
           {c.draft && (c.draft.flags.length > 0 || c.draft.review_reasons.length > 0) && <Concerns c={c} />}
           <Payment c={c} />
@@ -85,9 +86,15 @@ function Journey({ c }: { c: ClaimDetail }) {
   }
   const rejected = state === "CLOSED" && c.payments.length === 0;
   const waiting = state.startsWith("WAITING");
+  const strip = useRef<HTMLDivElement>(null);
+  useEffect(() => {  // on narrow screens, keep the current step in view
+    const el = strip.current, step = el?.querySelectorAll("li")[Math.max(current, 0)] as HTMLElement | undefined;
+    if (el && step && el.scrollWidth > el.clientWidth)
+      el.scrollTo({ left: step.offsetLeft - el.clientWidth / 2 + step.clientWidth / 2, behavior: "smooth" });
+  }, [current]);
   return (
     <Card>
-      <div className="-mx-1 overflow-x-auto px-1 pb-1">
+      <div ref={strip} className="-mx-1 overflow-x-auto px-1 pb-1">
         <ol className="relative flex min-w-[760px] items-start justify-between">
           <div className="absolute left-5 right-5 top-5 h-0.5 bg-line" />
           <motion.div className="absolute left-5 top-5 h-0.5 bg-brand" initial={{ width: 0 }}

@@ -46,9 +46,9 @@ export function MoneyStory({ c }: { c: ClaimDetail }) {
       </span>}>
       <div className="space-y-[2px]">
         {rows.map((r, i) => (
-          <div key={i} className="relative grid grid-cols-[minmax(0,150px)_1fr_auto] items-center gap-3 py-1.5 sm:grid-cols-[210px_1fr_110px]"
+          <div key={i} className="relative grid grid-cols-[112px_1fr_auto] items-center gap-3 py-1.5 sm:grid-cols-[210px_1fr_110px]"
             onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} onClick={() => setHover(hover === i ? null : i)}>
-            <div className={`truncate text-sm ${r.kind === "paid" || r.kind === "edit" ? "font-semibold" : "text-ink2"}`}>
+            <div className={`text-sm leading-tight ${r.kind === "paid" || r.kind === "edit" ? "font-semibold" : "text-ink2"}`}>
               {r.kind === "deduct" && "− "}{r.label}
             </div>
             <div className="relative h-7 rounded-[4px] bg-sunken/60">

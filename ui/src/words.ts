@@ -86,11 +86,11 @@ export const CATEGORY: Record<string, { label: string; hint: string }> = {
 };
 
 export const DEDUCTION: Record<string, string> = {
-  NON_PAYABLE: "Items the policy doesn't cover",
-  ROOM_RENT_PROPORTIONATE: "Room above the daily limit",
-  SUB_LIMIT: "Limit for this treatment",
-  CO_PAY: "Member's share (age 60+)",
-  BALANCE_CAP: "Only this much cover was left",
+  NON_PAYABLE: "Items not covered",
+  ROOM_RENT_PROPORTIONATE: "Room above daily limit",
+  SUB_LIMIT: "Treatment limit",
+  CO_PAY: "Member's share (60+)",
+  BALANCE_CAP: "Cover left this year",
 };
 
 export const FLAG: Record<string, { title: string; body: string }> = {
