@@ -13,3 +13,7 @@ python-dotenv==1.2.4
 PyYAML==6.0.3
 uvicorn==0.54.0
 python-multipart==0.0.34
+presidio-analyzer==2.2.366
+spacy==3.8.18
+en_core_web_lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl
+cryptography==50.0.2
