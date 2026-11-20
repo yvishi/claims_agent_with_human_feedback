@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Colour tokens (RGB triplets for Tailwind alpha). paid/deduct are the validated chart pair. */
+:root {
+  color-scheme: light;
+  --surface: 247 247 244;
+  --raised: 255 255 255;
+  --sunken: 238 238 234;
+  --line: 224 223 218;
+  --ink: 22 24 29;
+  --ink2: 82 81 78;
+  --ink3: 128 127 122;
+  --brand: 15 92 99;
+  --brandsoft: 222 239 238;
+  --paid: 42 120 214;      /* #2a78d6 */
+  --deduct: 235 104 52;    /* #eb6834 */
+  --good: 12 163 12;
+  --warn: 250 178 25;
+  --serious: 236 131 90;
+  --crit: 208 59 59;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface: 20 21 23;
+    --raised: 30 31 33;
+    --sunken: 14 15 16;
+    --line: 52 53 56;
+    --ink: 240 239 236;
+    --ink2: 195 194 183;
+    --ink3: 140 139 132;
+    --brand: 94 196 196;
+    --brandsoft: 24 52 54;
+    --paid: 57 135 229;    /* #3987e5 */
+    --deduct: 217 89 38;   /* #d95926 */
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: 20 21 23; --raised: 30 31 33; --sunken: 14 15 16; --line: 52 53 56;
+  --ink: 240 239 236; --ink2: 195 194 183; --ink3: 140 139 132;
+  --brand: 94 196 196; --brandsoft: 24 52 54; --paid: 57 135 229; --deduct: 217 89 38;
+}
+
+html, body { background: rgb(var(--surface)); color: rgb(var(--ink)); }
+body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+@keyframes flow { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+.flowing { stroke-dasharray: 6 6; animation: flow 1s linear infinite; }
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgb(var(--brand) / 0.45); } 100% { box-shadow: 0 0 0 12px rgb(var(--brand) / 0); } }
+.pulse-ring { animation: pulse-ring 1.6s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .flowing, .pulse-ring { animation: none; }
+}
