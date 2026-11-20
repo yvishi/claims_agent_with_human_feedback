@@ -7,3 +7,5 @@ __pycache__/
 results*.json
 !harness/results.example.json
 .DS_Store
+ui/node_modules/
+ui/dist/

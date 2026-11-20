@@ -34,6 +34,7 @@ app.add_middleware(SessionMiddleware, secret_key=os.getenv("CONSOLE_SECRET", "de
                    same_site="lax", max_age=8 * 3600)
 
 EXEC = ThreadPoolExecutor(max_workers=4, thread_name_prefix="claim")
+READS = ThreadPoolExecutor(max_workers=12, thread_name_prefix="read")
 _locks: dict[str, threading.Lock] = defaultdict(threading.Lock)
 _running: set[str] = set()
 
@@ -132,6 +133,9 @@ def me(request: Request):
 def list_claims(request: Request):
     _user(request)
     claims = _mock("/admin/claims")
+    # warm the name caches side by side (first load otherwise does ~40 lookups in a row)
+    list(READS.map(member, {c["member_id"] for c in claims}))
+    list(READS.map(hospital, {c["hospital_id"] for c in claims}))
     paid = defaultdict(lambda: D("0"))
     for p in _mock("/admin/payments"):
         paid[p["claim_id"]] += D(p["amount_inr"])
@@ -171,15 +175,27 @@ def claim_detail(claim_id: str, request: Request):
         c = services.get_claim(claim_id)
     except httpx.HTTPStatusError:
         raise HTTPException(404, "No such claim")
-    m, h = member(c["member_id"]), hospital(c["hospital_id"])
-    pol, bal = services.get_policy(c["policy_id"]), services.get_balance(c["policy_id"])
     payee = c.get("payee") or {}
-    with store.connect() as conn:
-        letter = conn.execute("SELECT body, fallback_used, at FROM letters WHERE claim_id=%s", (claim_id,)).fetchone()
-        events = conn.execute("""SELECT id, state, event, tool, result, actor, model, prompt_version, at
-                                 FROM audit_events WHERE claim_id=%s ORDER BY id""", (claim_id,)).fetchall()
-        pay_local = conn.execute("SELECT status, attempts FROM payments_local WHERE claim_id=%s", (claim_id,)).fetchone()
-    run = store.get_run(claim_id)
+
+    def _db():
+        with store.connect() as conn:
+            return (conn.execute("SELECT body, fallback_used, at FROM letters WHERE claim_id=%s", (claim_id,)).fetchone(),
+                    conn.execute("""SELECT id, state, event, tool, result, actor, model, prompt_version, at
+                                    FROM audit_events WHERE claim_id=%s ORDER BY id""", (claim_id,)).fetchall(),
+                    conn.execute("SELECT status, attempts FROM payments_local WHERE claim_id=%s", (claim_id,)).fetchone())
+
+    # About ten independent reads against a remote database: run them side by side.
+    jobs = {
+        "m": (member, c["member_id"]), "h": (hospital, c["hospital_id"]),
+        "pol": (services.get_policy, c["policy_id"]), "bal": (services.get_balance, c["policy_id"]),
+        "db": (_db,), "run": (store.get_run, claim_id), "draft": (store.get_draft, claim_id),
+        "approvals": (store.approvals, claim_id), "payments": (services.list_payments, claim_id),
+        "documents": (services.list_documents, claim_id), "emails": (services.list_emails, claim_id),
+    }
+    futs = {k: READS.submit(*v) for k, v in jobs.items()}
+    r = {k: f.result() for k, f in futs.items()}
+    m, h, pol, bal, run = r["m"], r["h"], r["pol"], r["bal"], r["run"]
+    letter, events, pay_local = r["db"]
     return {
         "claim_id": claim_id, **scenarios().get(claim_id, {}),
         "claim": {k: c.get(k) for k in ("cause", "admission_date", "discharge_date", "filed_on",
@@ -191,13 +207,13 @@ def claim_detail(claim_id: str, request: Request):
                    "remaining_inr": bal["remaining_inr"], "inception_date": pol["inception_date"],
                    "period_start": pol["period_start"], "period_end": pol["period_end"], "status": pol["status"]},
         "run": run, "waiting_for": _waiting_for(run), "busy": claim_id in _running,
-        "draft": store.get_draft(claim_id),
+        "draft": r["draft"],
         "approvals": [dict(a, name=approval.USERS.get(a["actor"], {}).get("name", "Harborline system"))
-                      for a in store.approvals(claim_id)],
-        "payments": services.list_payments(claim_id),
+                      for a in r["approvals"]],
+        "payments": r["payments"],
         "payment_status": {"status": pay_local[0], "attempts": pay_local[1]} if pay_local else None,
-        "documents": services.list_documents(claim_id),
-        "emails": services.list_emails(claim_id),
+        "documents": r["documents"],
+        "emails": r["emails"],
         "letter": {"body": letter[0], "template": letter[1], "at": letter[2].isoformat()} if letter else None,
         "timeline": [{"id": e[0], "state": e[1], "event": e[2], "tool": e[3], "result": e[4],
                       "actor": approval.USERS.get(e[5], {}).get("name", e[5]), "model": e[6],
