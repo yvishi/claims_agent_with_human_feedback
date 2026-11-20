@@ -4,7 +4,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import psycopg
+import psycopg  # noqa: F401
+from psycopg_pool import ConnectionPool
 from psycopg.types.json import Jsonb
 
 from harborline.config import get_settings
@@ -35,8 +36,16 @@ TABLES = ("policies", "members", "hospitals", "claims", "claim_bills", "document
           "payments", "payment_calls", "decisions")
 
 
-def connect() -> psycopg.Connection:
-    return psycopg.connect(get_settings().mock_db_url, autocommit=True)
+_pool: ConnectionPool | None = None
+
+
+def connect():
+    """A pooled connection (autocommit). Use as `with connect() as conn:`."""
+    global _pool
+    if _pool is None:
+        _pool = ConnectionPool(get_settings().mock_db_url, min_size=2, max_size=16, open=True,
+                               kwargs={"autocommit": True, "prepare_threshold": None})
+    return _pool.connection()
 
 
 def _pack_bill_numbers(folder: Path) -> list[str]:

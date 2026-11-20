@@ -6,6 +6,7 @@ import json
 from datetime import datetime, timezone
 
 import psycopg
+from psycopg_pool import ConnectionPool
 from psycopg.types.json import Jsonb
 
 from harborline.config import get_settings
@@ -38,8 +39,16 @@ CREATE TRIGGER audit_append_only BEFORE UPDATE OR DELETE ON audit_events
 APP_TABLES = ("claim_runs", "decisions", "approvals", "payments_local", "letters")
 
 
-def connect() -> psycopg.Connection:
-    return psycopg.connect(get_settings().app_db_url, autocommit=True)
+_pool: ConnectionPool | None = None
+
+
+def connect():
+    """A pooled connection (autocommit). Use as `with connect() as conn:`."""
+    global _pool
+    if _pool is None:
+        _pool = ConnectionPool(get_settings().app_db_url, min_size=1, max_size=8, open=True,
+                               kwargs={"autocommit": True, "prepare_threshold": None})
+    return _pool.connection()
 
 
 def setup() -> None:
