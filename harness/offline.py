@@ -55,7 +55,10 @@ def main() -> int:
     members = {m["member_id"]: m for m in data["members"]}
     hospitals = {h["hospital_id"]: h for h in data["hospitals"]}
 
-    docs = {cid: read_documents(files) for cid, (_, files) in claims.items()}
+    from harborline.rules.engine import load_rules
+    rules = load_rules(str(get_settings().rules_file))
+    names = [m["name"] for m in data["members"]]
+    docs = {cid: read_documents(files, names, rules) for cid, (_, files) in claims.items()}
 
     # Bill index: settled claims + every pack claim, as the Claims service will serve it.
     index: dict[tuple, list] = {}

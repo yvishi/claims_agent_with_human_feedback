@@ -9,6 +9,8 @@ from harborline.docs.classify import classify
 from harborline.docs.instructions import find_instructions
 from harborline.docs.parser import parse_bill, parse_discharge, parse_receipt
 from harborline.docs.reader import read_pdf_bytes
+from harborline.privacy.masker import mask
+from harborline.rules.engine import detect_condition
 
 OCR_MIN_CONF = 70.0  # mean Tesseract word confidence below this forces review
 
@@ -26,9 +28,14 @@ def doc_type(filename: str) -> str:
     return "other"
 
 
-def read_documents(files: dict[str, bytes]) -> dict:
-    """files: {filename: pdf bytes}. Returns bills, discharge, receipts, doc_flags, review_reasons."""
+def read_documents(files: dict[str, bytes], deny_names: list[str] | None = None,
+                   conditions_cfg: dict | None = None) -> dict:
+    """files: {filename: pdf bytes}. Returns bills, discharge, receipts, doc_flags, review_reasons,
+    and `pii` (placeholder -> value) for the vault. Parsing runs on the local text; anything that may
+    later leave the machine (other_text, LLM inputs) is masked. The discharge summary keeps only a
+    condition code and the eye, never the diagnosis text."""
     bills, receipts, discharge = [], [], None
+    pii: dict[str, str] = {}
     doc_flags: list[str] = []
     review: list[str] = []
     reads = {}
@@ -37,11 +44,14 @@ def read_documents(files: dict[str, bytes]) -> dict:
         if kind == "prescription" or kind == "other":
             continue
         r = read_pdf_bytes(files[name])
+        masked = mask(r.text, deny_names)
+        pii.update(masked.mapping)
         reads[name] = {"sha256": r.sha256, "mode": r.mode, "mean_conf": r.mean_conf}
         if r.mode == "ocr" and (r.mean_conf or 0) < OCR_MIN_CONF:
             review.append(f"LOW_CONFIDENCE: {name} read at {r.mean_conf}")
         if kind == "bill":
             b = parse_bill(r.text, name)
+            b["other_text"] = parse_bill(masked.text, name)["other_text"]
             for l in b["lines"]:
                 l["category"], l["confidence"], l["method"] = classify(l["description"])
             if b["problems"]:
@@ -53,6 +63,10 @@ def read_documents(files: dict[str, bytes]) -> dict:
             bills.append(b)
         elif kind == "discharge_summary":
             discharge = parse_discharge(r.text, name)
+            if conditions_cfg:
+                discharge["condition"] = detect_condition(discharge, conditions_cfg)
+                discharge.pop("diagnosis", None)
+                discharge.pop("procedure", None)
         elif kind == "receipt":
             receipts.append(parse_receipt(r.text, name))
     return {
@@ -62,4 +76,5 @@ def read_documents(files: dict[str, bytes]) -> dict:
         "reads": reads,
         "doc_flags": sorted(set(doc_flags)),
         "review_reasons": review,
+        "pii": pii,
     }

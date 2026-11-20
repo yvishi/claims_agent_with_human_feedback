@@ -81,7 +81,7 @@ def adjudicate(facts: dict, cfg: dict) -> dict:
     discharge_dt = _d(claim["discharge_date"])
     claimed = r2(D(str(claim["claimed_amount_inr"])))
     discharge = facts.get("discharge")
-    condition = detect_condition(discharge, cfg)
+    condition = (discharge or {}).get("condition") or detect_condition(discharge, cfg)
 
     flags: list[str] = []
     reject_code: str | None = None
