@@ -1,0 +1,20 @@
+fastapi==0.165.0
+httpx==0.28.1
+Jinja2==3.1.6
+langgraph==1.2.24
+langgraph-checkpoint-postgres==3.2.1
+pillow==13.0.0
+psycopg[binary,pool]==3.3.9
+psycopg-pool==3.3.3
+pymupdf==2.1
+pytesseract==0.3.13
+pytest==9.2.0
+python-dotenv==1.2.4
+PyYAML==6.0.3
+uvicorn==0.54.0
+python-multipart==0.0.34
+presidio-analyzer==2.2.366
+spacy==3.8.18
+en_core_web_lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl
+cryptography==50.0.2
+itsdangerous==2.2.0
