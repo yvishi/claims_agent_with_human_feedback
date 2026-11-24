@@ -2,60 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Palette: #1B365D navy · #005A9C blue · #60C1E5 sky · #A0E0EF mist (colorhunt 1b365d005a9c60c1e5a0e0ef).
+/* Palette: #898AA6 violet-grey · #C9BBCF lilac · #B7D3DF powder · #D6EFED mint (colorhunt 898aa6c9bbcfb7d3dfd6efed).
+   The four are pastels, so text and buttons use deeper steps of the violet (all >= 4.5:1).
    Tokens are RGB triplets so Tailwind can add alpha. Chart pair paid/deduct is validated
    (dataviz validate_palette.js) for both modes against --surface. */
 :root {
   color-scheme: light;
-  --surface: 238 245 250;   /* #eef5fa */
+  --surface: 242 245 247;   /* #f2f5f7 */
   --raised: 255 255 255;
-  --sunken: 226 237 245;
-  --line: 205 222 235;
-  --ink: 27 54 93;          /* navy */
-  --ink2: 61 86 120;
-  --ink3: 98 120 150;
-  --brand: 0 90 156;        /* blue */
+  --sunken: 232 236 241;
+  --line: 216 220 230;
+  --ink: 46 47 69;          /* #2e2f45 deep violet */
+  --ink2: 85 86 111;
+  --ink3: 110 111 136;
+  --brand: 95 96 136;       /* #5f6088 deep #898AA6 */
   --onbrand: 255 255 255;
-  --brandsoft: 214 238 247;
-  --navy: 27 54 93;
-  --sky: 96 193 229;
-  --mist: 160 224 239;
-  --paid: 0 90 156;         /* #005a9c */
-  --deduct: 235 104 52;     /* #eb6834 — below 3:1 on surface: always direct-labelled */
+  --brandsoft: 236 230 240;
+  --navy: 46 47 69;
+  --sky: 183 211 223;       /* #b7d3df */
+  --mist: 214 239 237;      /* #d6efed */
+  --lilac: 201 187 207;     /* #c9bbcf */
+  --violet: 137 138 166;    /* #898aa6 */
+  --paid: 90 94 176;        /* #5a5eb0 */
+  --deduct: 217 114 91;     /* #d9725b — below 3:1 on surface: always direct-labelled */
   --good: 12 140 70;
   --warn: 232 160 20;
   --serious: 236 131 90;
   --crit: 208 59 59;
   /* glass */
   --glass: 255 255 255;
-  --glass-a: 0.62;
-  --glass-strong-a: 0.8;
+  --glass-a: 0.6;
+  --glass-strong-a: 0.78;
   --edge: 255 255 255;
   --edge-a: 0.7;
-  --shadow: 27 54 93;
+  --shadow: 70 60 100;
   --hi-a: 0.7;              /* top highlight */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --surface: 8 19 36; --raised: 27 54 93; --sunken: 12 27 49; --line: 46 74 110;
-    --ink: 236 245 251; --ink2: 178 203 224; --ink3: 128 155 184;
-    --brand: 96 193 229; --onbrand: 8 19 36; --brandsoft: 20 52 84;
-    --paid: 58 160 208; --deduct: 217 89 38;
+    --surface: 26 26 40; --raised: 46 47 69; --sunken: 33 33 50; --line: 64 65 92;
+    --ink: 240 239 245; --ink2: 201 187 207; --ink3: 149 150 175;
+    --brand: 183 211 223; --onbrand: 26 26 40; --brandsoft: 52 53 80;
+    --paid: 124 128 208; --deduct: 212 101 75;
     --good: 52 190 110; --warn: 245 184 50;
-    --glass: 27 54 93; --glass-a: 0.42; --glass-strong-a: 0.72;
-    --edge: 160 224 239; --edge-a: 0.16; --shadow: 0 0 0; --hi-a: 0.08;
+    --glass: 46 47 69; --glass-a: 0.45; --glass-strong-a: 0.74;
+    --edge: 214 239 237; --edge-a: 0.14; --shadow: 0 0 0; --hi-a: 0.08;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface: 8 19 36; --raised: 27 54 93; --sunken: 12 27 49; --line: 46 74 110;
-  --ink: 236 245 251; --ink2: 178 203 224; --ink3: 128 155 184;
-  --brand: 96 193 229; --onbrand: 8 19 36; --brandsoft: 20 52 84;
-  --paid: 58 160 208; --deduct: 217 89 38;
+  --surface: 26 26 40; --raised: 46 47 69; --sunken: 33 33 50; --line: 64 65 92;
+  --ink: 240 239 245; --ink2: 201 187 207; --ink3: 149 150 175;
+  --brand: 183 211 223; --onbrand: 26 26 40; --brandsoft: 52 53 80;
+  --paid: 124 128 208; --deduct: 212 101 75;
   --good: 52 190 110; --warn: 245 184 50;
-  --glass: 27 54 93; --glass-a: 0.42; --glass-strong-a: 0.72;
-  --edge: 160 224 239; --edge-a: 0.16; --shadow: 0 0 0; --hi-a: 0.08;
+  --glass: 46 47 69; --glass-a: 0.45; --glass-strong-a: 0.74;
+  --edge: 214 239 237; --edge-a: 0.14; --shadow: 0 0 0; --hi-a: 0.08;
 }
 
 html, body { background: rgb(var(--surface)); color: rgb(var(--ink)); }
@@ -106,7 +109,10 @@ body { font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, sans-s
 
 /* The space everything floats in: soft orbs of the palette, fixed behind the page. */
 .spatial-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
-  background: radial-gradient(1200px 700px at 50% -10%, rgb(var(--mist) / 0.55), transparent 60%), rgb(var(--surface)); }
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgb(var(--mist) / 0.6), transparent 60%),
+    radial-gradient(900px 600px at 0% 100%, rgb(var(--lilac) / 0.45), transparent 60%),
+    rgb(var(--surface)); }
 .spatial-bg .orb { position: absolute; border-radius: 9999px; filter: blur(80px); opacity: 0.55; animation: drift 28s ease-in-out infinite alternate; }
 :root[data-theme="dark"] .spatial-bg .orb { opacity: 0.35; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .spatial-bg .orb { opacity: 0.35; } }
