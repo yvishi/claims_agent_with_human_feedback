@@ -214,6 +214,7 @@ def claim_detail(claim_id: str, request: Request):
         "payment_status": {"status": pay_local[0], "attempts": pay_local[1]} if pay_local else None,
         "documents": r["documents"],
         "emails": r["emails"],
+        "pending_files": _pending_files(claim_id, r["emails"], r["documents"]),
         "letter": {"body": letter[0], "template": letter[1], "at": letter[2].isoformat()} if letter else None,
         "timeline": [{"id": e[0], "state": e[1], "event": e[2], "tool": e[3], "result": e[4],
                       "actor": approval.USERS.get(e[5], {}).get("name", e[5]), "model": e[6],
@@ -245,18 +246,30 @@ def act(claim_id: str, body: Action, request: Request):
     return result
 
 
+def _late_dir(claim_id: str):
+    return get_settings().claim_pack_dir / "harness" / "late_documents" / claim_id
+
+
+def _pending_files(claim_id: str, emails: list[dict], documents: list[dict]) -> list[str]:
+    """Requested documents the member has not sent yet but that the demo pack holds, so the demo can send them."""
+    late, have = _late_dir(claim_id), {d["filename"] for d in documents}
+    out = []
+    for e in emails:
+        fname = LATE_FILENAMES.get(e.get("doc_type") or "")
+        if e["kind"] == "docs_request" and fname and fname not in have and fname not in out and (late / fname).exists():
+            out.append(fname)
+    return out
+
+
 @app.post("/api/claims/{claim_id}/deliver-missing")
 def deliver_missing(claim_id: str, request: Request):
     """Demo helper: act as the member uploading the requested documents from the pack."""
     _user(request)
-    late = get_settings().claim_pack_dir / "harness" / "late_documents" / claim_id
-    have = {d["filename"] for d in services.list_documents(claim_id)}
+    late = _late_dir(claim_id)
     sent = []
-    for e in services.list_emails(claim_id):
-        fname = LATE_FILENAMES.get(e.get("doc_type") or "")
-        if e["kind"] == "docs_request" and fname and fname not in have and (late / fname).exists():
-            services.upload_document(claim_id, fname, (late / fname).read_bytes())
-            sent.append(fname)
+    for fname in _pending_files(claim_id, services.list_emails(claim_id), services.list_documents(claim_id)):
+        services.upload_document(claim_id, fname, (late / fname).read_bytes())
+        sent.append(fname)
     if sent:
         submit(claim_id)
     return {"delivered": sent}

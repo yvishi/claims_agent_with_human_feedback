@@ -38,6 +38,7 @@ export type ClaimDetail = {
   payment_status: { status: string; attempts: number } | null;
   documents: { filename: string; uploaded_at: string }[];
   emails: { idempotency_key: string; kind: string; doc_type: string | null; subject: string; sent_at: string }[];
+  pending_files: string[];
   letter: { body: string; template: boolean; at: string } | null;
   timeline: TimelineEvent[];
 };
