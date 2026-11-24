@@ -5,6 +5,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { api, type User } from "../api";
 import { ROLE } from "../words";
 import { Avatar, EASE } from "./bits";
+import { ThemeToggle } from "./ThemeToggle";
 
 function Mark({ size = 34 }: { size?: number }) {
   return (
@@ -75,6 +76,7 @@ export function Shell({ user, onSignOut, children }: { user: User; onSignOut: ()
               <div className="text-sm font-medium leading-tight text-ink">{user.name}</div>
               <div className="text-xs text-ink3">{ROLE[user.role]}</div>
             </div>
+            <ThemeToggle id="header-theme" />
             <Avatar name={user.name} size={34} />
             <button aria-label="Sign out" title="Sign out" onClick={async () => { await api.logout(); onSignOut(); }}
               className="flex h-9 w-9 items-center justify-center rounded-full text-ink2 outline-none transition-colors hover:bg-sunken/70 hover:text-ink focus-visible:ring-2 focus-visible:ring-brand/50">
@@ -112,7 +114,8 @@ export function SignIn({ onSignedIn }: { onSignedIn: (u: User) => void }) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
+      <div className="absolute right-4 top-4 sm:right-6 sm:top-6"><ThemeToggle id="signin-theme" /></div>
       <motion.div
         initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: EASE }}
