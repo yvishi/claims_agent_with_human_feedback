@@ -2,56 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Colour tokens (RGB triplets for Tailwind alpha). paid/deduct are the validated chart pair. */
+/* Palette: #898AA6 violet-grey · #C9BBCF lilac · #B7D3DF powder · #D6EFED mint (colorhunt 898aa6c9bbcfb7d3dfd6efed).
+   The four are pastels, so text and buttons use deeper steps of the violet (all >= 4.5:1).
+   Tokens are RGB triplets so Tailwind can add alpha. Chart pair paid/deduct is validated
+   (dataviz validate_palette.js) for both modes against --surface. */
 :root {
   color-scheme: light;
-  --surface: 247 247 244;
+  --surface: 242 245 247;   /* #f2f5f7 */
   --raised: 255 255 255;
-  --sunken: 238 238 234;
-  --line: 224 223 218;
-  --ink: 22 24 29;
-  --ink2: 82 81 78;
-  --ink3: 128 127 122;
-  --brand: 15 92 99;
-  --brandsoft: 222 239 238;
-  --paid: 42 120 214;      /* #2a78d6 */
-  --deduct: 235 104 52;    /* #eb6834 */
-  --good: 12 163 12;
-  --warn: 250 178 25;
+  --sunken: 232 236 241;
+  --line: 216 220 230;
+  --ink: 46 47 69;          /* #2e2f45 deep violet */
+  --ink2: 85 86 111;
+  --ink3: 110 111 136;
+  --brand: 95 96 136;       /* #5f6088 deep #898AA6 */
+  --onbrand: 255 255 255;
+  --brandsoft: 236 230 240;
+  --navy: 46 47 69;
+  --sky: 183 211 223;       /* #b7d3df */
+  --mist: 214 239 237;      /* #d6efed */
+  --lilac: 201 187 207;     /* #c9bbcf */
+  --violet: 137 138 166;    /* #898aa6 */
+  --paid: 90 94 176;        /* #5a5eb0 */
+  --deduct: 217 114 91;     /* #d9725b — below 3:1 on surface: always direct-labelled */
+  --good: 12 140 70;
+  --warn: 232 160 20;
   --serious: 236 131 90;
   --crit: 208 59 59;
+  /* glass */
+  --glass: 255 255 255;
+  --glass-a: 0.6;
+  --glass-strong-a: 0.78;
+  --edge: 255 255 255;
+  --edge-a: 0.7;
+  --shadow: 70 60 100;
+  --hi-a: 0.7;              /* top highlight */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --surface: 20 21 23;
-    --raised: 30 31 33;
-    --sunken: 14 15 16;
-    --line: 52 53 56;
-    --ink: 240 239 236;
-    --ink2: 195 194 183;
-    --ink3: 140 139 132;
-    --brand: 94 196 196;
-    --brandsoft: 24 52 54;
-    --paid: 57 135 229;    /* #3987e5 */
-    --deduct: 217 89 38;   /* #d95926 */
+    --surface: 26 26 40; --raised: 46 47 69; --sunken: 33 33 50; --line: 64 65 92;
+    --ink: 240 239 245; --ink2: 201 187 207; --ink3: 149 150 175;
+    --brand: 183 211 223; --onbrand: 26 26 40; --brandsoft: 52 53 80;
+    --paid: 124 128 208; --deduct: 212 101 75;
+    --good: 52 190 110; --warn: 245 184 50;
+    --glass: 46 47 69; --glass-a: 0.45; --glass-strong-a: 0.74;
+    --edge: 214 239 237; --edge-a: 0.14; --shadow: 0 0 0; --hi-a: 0.08;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --surface: 20 21 23; --raised: 30 31 33; --sunken: 14 15 16; --line: 52 53 56;
-  --ink: 240 239 236; --ink2: 195 194 183; --ink3: 140 139 132;
-  --brand: 94 196 196; --brandsoft: 24 52 54; --paid: 57 135 229; --deduct: 217 89 38;
+  --surface: 26 26 40; --raised: 46 47 69; --sunken: 33 33 50; --line: 64 65 92;
+  --ink: 240 239 245; --ink2: 201 187 207; --ink3: 149 150 175;
+  --brand: 183 211 223; --onbrand: 26 26 40; --brandsoft: 52 53 80;
+  --paid: 124 128 208; --deduct: 212 101 75;
+  --good: 52 190 110; --warn: 245 184 50;
+  --glass: 46 47 69; --glass-a: 0.45; --glass-strong-a: 0.74;
+  --edge: 214 239 237; --edge-a: 0.14; --shadow: 0 0 0; --hi-a: 0.08;
 }
 
 html, body { background: rgb(var(--surface)); color: rgb(var(--ink)); }
-body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { font-family: "Plus Jakarta Sans", Inter, ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 .tabular { font-variant-numeric: tabular-nums; }
 
-@keyframes flow { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
-.flowing { stroke-dasharray: 6 6; animation: flow 1s linear infinite; }
+@layer components {
+  /* A frosted pane floating above the backdrop. */
+  .glass {
+    background: rgb(var(--glass) / var(--glass-a));
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgb(var(--edge) / var(--edge-a));
+    border-radius: 24px;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / var(--hi-a)),
+      0 1px 2px rgb(var(--shadow) / 0.06),
+      0 24px 56px -24px rgb(var(--shadow) / 0.35);
+  }
+  /* Higher in the stack: floating windows, menus, the sticky header. */
+  .glass-strong {
+    background: rgb(var(--glass) / var(--glass-strong-a));
+    -webkit-backdrop-filter: blur(32px) saturate(180%);
+    backdrop-filter: blur(32px) saturate(180%);
+    border: 1px solid rgb(var(--edge) / var(--edge-a));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / var(--hi-a)),
+      0 2px 6px rgb(var(--shadow) / 0.08),
+      0 40px 80px -28px rgb(var(--shadow) / 0.45);
+  }
+  /* Recessed well inside a pane (inputs, inner panels). */
+  .well { background: rgb(var(--sunken) / 0.7); border-radius: 16px; box-shadow: inset 0 1px 2px rgb(var(--shadow) / 0.08); }
+
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn text-onbrand; background: linear-gradient(180deg, rgb(var(--brand)) 0%, rgb(var(--brand) / 0.86) 100%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 8px 20px -8px rgb(var(--brand) / 0.7); }
+  .btn-primary:not(:disabled):hover { transform: translateY(-1px); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 12px 26px -8px rgb(var(--brand) / 0.8); }
+  .btn-ghost { @apply btn text-ink; background: rgb(var(--glass) / 0.5); border: 1px solid rgb(var(--edge) / var(--edge-a)); }
+  .btn-ghost:not(:disabled):hover { background: rgb(var(--glass) / 0.8); }
+  .btn-danger { @apply btn text-white; background: rgb(var(--crit)); box-shadow: 0 8px 20px -8px rgb(var(--crit) / 0.7); }
+
+  .field { @apply w-full rounded-xl px-3 py-2 text-sm text-ink outline-none transition-shadow; background: rgb(var(--sunken) / 0.7);
+    border: 1px solid rgb(var(--line)); }
+  .field:focus { border-color: rgb(var(--brand)); box-shadow: 0 0 0 4px rgb(var(--brand) / 0.15); }
+
+  .eyebrow { @apply text-[11px] font-semibold uppercase tracking-[0.12em] text-ink3; }
+}
+
+/* The space everything floats in: soft orbs of the palette, fixed behind the page. */
+.spatial-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgb(var(--mist) / 0.6), transparent 60%),
+    radial-gradient(900px 600px at 0% 100%, rgb(var(--lilac) / 0.45), transparent 60%),
+    rgb(var(--surface)); }
+.spatial-bg .orb { position: absolute; border-radius: 9999px; filter: blur(80px); opacity: 0.55; animation: drift 28s ease-in-out infinite alternate; }
+:root[data-theme="dark"] .spatial-bg .orb { opacity: 0.35; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .spatial-bg .orb { opacity: 0.35; } }
+@keyframes drift { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(40px, -30px, 0) scale(1.08); } }
+
 @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgb(var(--brand) / 0.45); } 100% { box-shadow: 0 0 0 12px rgb(var(--brand) / 0); } }
 .pulse-ring { animation: pulse-ring 1.6s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .flowing, .pulse-ring { animation: none; }
+  .pulse-ring, .spatial-bg .orb { animation: none; }
 }

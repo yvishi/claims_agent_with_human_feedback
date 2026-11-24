@@ -1,23 +1,38 @@
 """The agent reaches the outside world only through these calls (httpx, explicit timeouts)."""
 from __future__ import annotations
 
+import time
+
 import httpx
 
 from harborline.config import get_settings
 
 TIMEOUT = httpx.Timeout(10.0, connect=5.0)
 PAYMENT_TIMEOUT = httpx.Timeout(5.0, connect=5.0)
+READ_ATTEMPTS = 3  # reads only: a sleeping database can take >10 s to answer its first query
 
 
 def _client(timeout=TIMEOUT) -> httpx.Client:
     return httpx.Client(base_url=get_settings().mock_base_url, timeout=timeout)
 
 
+def _read(path: str, params: dict | None = None) -> httpx.Response:
+    """GET with a short backoff on timeouts and dropped connections. GETs change nothing, so retrying is safe."""
+    for attempt in range(READ_ATTEMPTS):
+        try:
+            with _client() as c:
+                r = c.get(path, params=params or None)
+            r.raise_for_status()
+            return r
+        except (httpx.TimeoutException, httpx.TransportError):
+            if attempt == READ_ATTEMPTS - 1:
+                raise
+            time.sleep(1 + attempt * 2)
+    raise AssertionError("unreachable")
+
+
 def _get(path: str, **params):
-    with _client() as c:
-        r = c.get(path, params=params or None)
-        r.raise_for_status()
-        return r.json()
+    return _read(path, params).json()
 
 
 def _post(path: str, body: dict, key: str):
@@ -43,10 +58,7 @@ def list_documents(cid): return _get(f"/claims/{cid}/documents")
 
 
 def get_document(cid, filename) -> bytes:
-    with _client() as c:
-        r = c.get(f"/claims/{cid}/documents/{filename}")
-        r.raise_for_status()
-        return r.content
+    return _read(f"/claims/{cid}/documents/{filename}").content
 
 
 def upload_document(cid, filename, content: bytes):
