@@ -2,6 +2,11 @@
 const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  // dark: follows the device unless the user picked a theme (data-theme on <html>), matching index.css.
+  darkMode: ["variant", [
+    "@media (prefers-color-scheme: dark) { &:not(:where([data-theme=light], [data-theme=light] *)) }",
+    "&:where([data-theme=dark], [data-theme=dark] *)",
+  ]],
   theme: {
     extend: {
       colors: {
