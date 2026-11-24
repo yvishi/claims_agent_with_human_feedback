@@ -1,6 +1,6 @@
 import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "framer-motion";
 import {
-  AlertTriangle, ArrowLeft, Building2, CalendarDays, Check, ChevronDown, FileText, Hash, Info, Loader2, Lock, Mail, X,
+  AlertTriangle, ArrowLeft, Building2, CalendarDays, Check, ChevronDown, FileText, Hash, Info, Loader2, Lock, Mail, Upload, X,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -96,7 +96,7 @@ export function ClaimPage({ user }: { user: User }) {
           </div>
           <div className="order-1 min-w-0 space-y-5 sm:space-y-6 lg:order-2">
             <Decision c={c} user={user} onDone={refresh} />
-            {state === "WAITING_FOR_DOCS" && <DocsWaiting c={c} />}
+            {state === "WAITING_FOR_DOCS" && <DocsWaiting c={c} onSent={refresh} />}
             {c.draft && (c.draft.flags.length > 0 || c.draft.review_reasons.length > 0) && <Concerns c={c} />}
             <Payment c={c} />
           </div>
@@ -553,8 +553,18 @@ function Decision({ c, user, onDone }: { c: ClaimDetail; user: User; onDone: () 
   );
 }
 
-function DocsWaiting({ c }: { c: ClaimDetail }) {
+function DocsWaiting({ c, onSent }: { c: ClaimDetail; onSent: () => void }) {
   const asked = c.emails.filter((e) => e.kind === "docs_request");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const send = async () => {
+    setBusy(true); setErr(null);
+    try {
+      const r = await api.deliverMissing(c.claim_id);
+      if (!r.delivered.length) setErr("There was nothing new to send.");
+    } catch { setErr("We couldn't send the document. Please try again."); }
+    finally { setBusy(false); onSent(); }
+  };
   return (
     <Pane delay={0.16} className="ring-1 ring-inset ring-warn/35">
       <PaneTitle icon={<Mail size={15} />}>Waiting for documents</PaneTitle>
@@ -567,6 +577,16 @@ function DocsWaiting({ c }: { c: ClaimDetail }) {
         ))}
       </ul>
       <p className="mt-3 text-sm text-ink2">The claim continues automatically once the member sends it.</p>
+      {c.pending_files.length > 0 && (
+        <div className="mt-4 border-t border-line pt-4">
+          <p className="text-xs text-ink3">For this demo, you can send the member's document on their behalf.</p>
+          <button disabled={busy || c.busy} onClick={send} className="btn-primary mt-2.5 w-full justify-center">
+            {busy ? <><Loader2 size={15} className="animate-spin" /> Sending…</>
+              : <><Upload size={15} /> Send the member's {c.pending_files.length > 1 ? "documents" : "document"}</>}
+          </button>
+        </div>
+      )}
+      {err && <p role="alert" className="mt-2 text-sm text-crit">{err}</p>}
     </Pane>
   );
 }
